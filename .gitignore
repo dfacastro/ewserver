@@ -1,0 +1,14 @@
+*
+!*.txt
+!readme
+!/src/
+!src/*
+!/src/ewserver/
+!src/ewserver/*.java
+!src/ewserver/*.txt
+!.gitignore
+
+!/test/
+!test/*
+!/test/ewserver/
+!test/ewserver/*.java
