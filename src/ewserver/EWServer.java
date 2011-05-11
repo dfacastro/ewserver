@@ -27,12 +27,15 @@ public class EWServer {
             JSONObject js = new JSONObject();
             js.put("username", "user1");
             js.put("pass", "pass1");
-            dbm.companies.add(js);
+            //dbm.companies.add(js);
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        System.out.println(dbm.companies.get("14")); 
+        try {
+            System.out.println(dbm.companies.get("67", 2).toString(3));
+        } catch (JSONException ex) {
+            Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
                 
     }
 }

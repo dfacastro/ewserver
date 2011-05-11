@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -61,7 +62,17 @@ public class DBCompanies {
 
     }
 
-    public JSONObject get(String idc) {
+    /**
+     * Devolve o JSONObject correspondente à empresa indicada.
+     * Modos:
+     * 0 Short: idc, nome, cidade
+     * 1 Default: idc, nome, cidade, morada, descricao, telefones
+     * 2 Full: idc, nome, cidade, morada, descricao, telefones, gc_username, gc_password, gc_nome
+     * @param idc
+     * @param mode
+     * @return 
+     */
+    public JSONObject get(String idc, int mode) {
         JSONObject comp = new JSONObject();
 
         try {
@@ -72,23 +83,49 @@ public class DBCompanies {
             //não existem empresas com o id indicado
             if (!rs.next()) {
                 return null;
-            } else {
-                //construcao do objecto JSON da empresa
-                try {
-                    comp.put("idc", idc);
-                    comp.put("nome", (rs.getString("NOME_EMPRESA")==null)? "": rs.getString("NOME_EMPRESA"));
-                    comp.put("morada", (rs.getString("MORADA")==null)? "": rs.getString("MORADA"));
-                    comp.put("cidade", (rs.getString("CIDADE")==null)? "": rs.getString("CIDADE"));
-                    comp.put("descricao", (rs.getString("DESCRICAO")==null)? "": rs.getString("DESCRICAO"));
-                    //comp.put("USER", (rs.getString("USERNAME")==null)? "": rs.getString("USERNAME"));
-                    
-                } catch (JSONException ex) {
-                    Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println("ERROR: Get Company: malformed JSON.");
-                    return null;
-                }
             }
 
+            String username = rs.getString("USERNAME");
+
+            //construcao do objecto JSON da empresa
+            try {
+                comp.put("idc", idc);
+                comp.put("nome", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
+                comp.put("cidade", (rs.getString("CIDADE") == null) ? "" : rs.getString("CIDADE"));
+                
+                //comp.put("USER", (rs.getString("USERNAME")==null)? "": rs.getString("USERNAME"));
+
+                if (mode == 2) {
+                    comp.put("gc_username", (rs.getString("GC_USERNAME") == null) ? "" : rs.getString("GC_USERNAME"));
+                    comp.put("gc_password", (rs.getString("GC_PASSWORD") == null) ? "" : rs.getString("GC_PASSWORD"));
+                    comp.put("gc_nome", (rs.getString("GC_NOME") == null) ? "" : rs.getString("GC_NOME"));
+                }
+
+                if (mode == 1 || mode == 2) {
+                    comp.put("descricao", (rs.getString("DESCRICAO") == null) ? "" : rs.getString("DESCRICAO"));
+                    comp.put("morada", (rs.getString("MORADA") == null) ? "" : rs.getString("MORADA"));
+
+                    //JSONArray com os telefones
+                    JSONArray tels = new JSONArray();
+
+                    rs = s.executeQuery("SELECT * FROM tels");// WHERE username = '" + username + "'");
+
+                    while (rs.next()) {
+                        tels.put(rs.getInt("TELEFONE"));
+                    }
+
+                    comp.put("telefones", tels);
+                }
+
+            } catch (JSONException ex) {
+                Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("ERROR: Get Company: malformed JSON.");
+                return null;
+            }
+
+
+            s.close();
+            rs.close();
 
         } catch (SQLException ex) {
             Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
@@ -97,10 +134,13 @@ public class DBCompanies {
 
         return comp;
     }
-    
-    
+
     public boolean update(JSONObject comp) {
-        
+
+        //String idc = comp.getString(null);
+
+
+
         return true;
     }
 }
