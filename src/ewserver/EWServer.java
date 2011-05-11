@@ -4,16 +4,35 @@
  */
 package ewserver;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  *
  * @author Diogo
  */
 public class EWServer {
+    
+    static DBManager dbm = new DBManager();
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        try {
+            // TODO code application logic here
+            
+            JSONObject js = new JSONObject();
+            js.put("username", "user1");
+            js.put("pass", "pass1");
+            dbm.addCompany(js);
+        } catch (JSONException ex) {
+            Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        //while(true);
+        
     }
 }
