@@ -27,7 +27,7 @@ public class EWServer {
             JSONObject js = new JSONObject();
             js.put("username", "user1");
             js.put("pass", "pass1");
-            dbm.addCompany(js);
+            dbm.companies.add(js);
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
