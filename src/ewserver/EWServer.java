@@ -4,6 +4,7 @@
  */
 package ewserver;
 
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -32,7 +33,14 @@ public class EWServer {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            System.out.println(dbm.companies.get("67", 2).toString(3));
+            System.out.println(dbm.companies.get("67", 0).toString(3));
+            System.out.println(dbm.companies.find("mycomp").toString(3));
+            
+            //update - muda o nome da cidade da empresa no. 67
+            JSONObject j = dbm.companies.get("67", 2);
+            j.put("cidade", "porto");
+            dbm.companies.update(j,"dcastro");
+            
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
