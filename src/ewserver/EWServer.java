@@ -32,7 +32,7 @@ public class EWServer {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        //while(true);
-        
+        System.out.println(dbm.companies.get("14")); 
+                
     }
 }
