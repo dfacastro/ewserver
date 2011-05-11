@@ -21,7 +21,7 @@ import org.json.JSONObject;
  */
 public class DBManager {
 
-    Connection con = null;
+    private Connection con = null;
     DBCompanies companies;
 
     DBManager() {
