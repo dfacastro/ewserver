@@ -41,6 +41,10 @@ public class EWServer {
             j.put("cidade", "porto");
             dbm.companies.update(j,"dcastro");
             
+            //cria nova sessão
+            System.out.println(dbm.sessions.add("dcastro", "hgjh2f65gdyhj"));
+            System.out.println("SESSION: " + dbm.sessions.getUsername("hgjh2f65gdyhj"));
+            
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }

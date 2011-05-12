@@ -22,7 +22,8 @@ import org.json.JSONObject;
 public class DBManager {
 
     private Connection con = null;
-    DBCompanies companies;
+    DBCompanies companies = null;
+    DBSessions sessions = null;
 
     DBManager() {
         try {
@@ -37,6 +38,7 @@ public class DBManager {
             System.exit(1);
         }
         companies = new DBCompanies(con);
+        sessions = new DBSessions(con);
         System.out.println("Successfully connected to the remote database.");
     }
 
