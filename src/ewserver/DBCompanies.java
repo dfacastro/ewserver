@@ -263,4 +263,90 @@ public class DBCompanies {
         }
         return comps;
     }
+    
+    /**
+     * Apaga a conta de uma empresa.
+     * @param username
+     * @return: true em caso de sucesso. 
+     */
+    public boolean delete(String username) {
+        /**
+         * TODO: testar
+         */
+        try {
+            Statement s = con.createStatement();
+            s.executeQuery("DELETE FROM empresas WHERE username = '" + username + "'");
+            s.close();
+            return true;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
+    }
+    
+
+    /**
+     * Retorna um JSONArray com os proximos eventos (short) duma empresa ordenados pela data de inicio.
+     * Devolve null em caso de erro (e.g. empresa nao existe)
+     * ou um array vazio caso não hajam eventos.
+     * @param idc
+     * @return 
+     */
+    public JSONArray getUpcomingEvents(String idc) {
+        
+        /**
+         * TODO: testar
+         */
+        JSONArray events = new JSONArray();
+        
+        try {
+            
+            //pesquisa o username corresponde ao ID indicado
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT username, nome_empresa FROM empresas WHERE emp_id = '" + idc + "'");
+            
+            //empresa nao existe
+            if(!rs.next())
+                return null;
+            
+            //parse do username
+            String username = rs.getString("USERNAME");
+            String nome_emp = rs.getString("NOME_EMPRESA");
+            
+            s.close();
+            rs.close();
+            
+            //pesquisa os eventos do user ordenados pela data de inicio
+            s = con.createStatement();
+            rs = s.executeQuery("SELECT * from eventos WHERE username = " + username + "' ORDER BY dinicio");
+            
+            //percorre os resultados da pesquisa e adiciona-os ao array
+            while(rs.next()) {
+                JSONObject event = new JSONObject();
+                
+                event.put("nome_emp", nome_emp);
+                event.put("id", rs.getString("EVENT_ID"));
+                event.put("nome", rs.getString("NOME"));
+                event.put("onde", rs.getString("ONDE"));
+                event.put("dinicio", rs.getString("DINICIO"));
+                
+                events.put(event);
+                
+            }
+            
+            s.close();
+            rs.close();
+        } catch (JSONException ex) {
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: Upcoming Events: JSON Exception.");
+            return null;
+        } catch (SQLException ex) {
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: Upcoming Events: SQL exception.");
+            return null;
+        }
+        
+        return events;
+    }
 }
