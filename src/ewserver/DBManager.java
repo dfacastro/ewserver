@@ -24,6 +24,7 @@ public class DBManager {
     private Connection con = null;
     DBCompanies companies = null;
     DBSessions sessions = null;
+    DBAccounts accounts = null;
 
     DBManager() {
         try {
@@ -39,6 +40,7 @@ public class DBManager {
         }
         companies = new DBCompanies(con);
         sessions = new DBSessions(con);
+        accounts = new DBAccounts(con);
         System.out.println("Successfully connected to the remote database.");
     }
 
