@@ -27,40 +27,7 @@ public class DBCompanies {
         con = c;
     }
     
-    public boolean add(JSONObject comp) {
-        String username = "";
-        String pass = "";
-        
-        try {
-            username = comp.getString("username");
-            pass = comp.getString("pass");
-        } catch (JSONException ex) {
-            Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("ERROR: Add Company: Received malformed JSON.");
-            return false;
-        }
-        
-        try {
-            PreparedStatement ps = con.prepareStatement("INSERT INTO empresas(username, password) values(?, ?)");
-            ps.setString(1, username);
-            ps.setString(2, pass);
-            
-            ps.execute();
-            ps.close();
-        } catch (SQLException ex) {
-            if (ex.getErrorCode() == 1) {
-                System.out.println("ERROR: Add Company: Username already exists.");
-            } else {
-                Logger.getLogger(DBManager.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            return false;
-        }
-        
-        System.out.println("Added new account   " + username + ":" + pass);
-        
-        return true;
-        
-    }
+
 
     /**
      * Devolve o JSONObject correspondente à empresa indicada.
@@ -262,29 +229,7 @@ public class DBCompanies {
             return null;
         }
         return comps;
-    }
-    
-    /**
-     * Apaga a conta de uma empresa.
-     * @param username
-     * @return: true em caso de sucesso. 
-     */
-    public boolean delete(String username) {
-        /**
-         * TODO: testar
-         */
-        try {
-            Statement s = con.createStatement();
-            s.executeQuery("DELETE FROM empresas WHERE username = '" + username + "'");
-            s.close();
-            return true;
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
-            return false;
-        }
-    }
-    
+    }   
 
     /**
      * Retorna um JSONArray com os proximos eventos (short) duma empresa ordenados pela data de inicio.
@@ -319,7 +264,7 @@ public class DBCompanies {
             
             //pesquisa os eventos do user ordenados pela data de inicio
             s = con.createStatement();
-            rs = s.executeQuery("SELECT * from eventos WHERE username = " + username + "' ORDER BY dinicio");
+            rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from eventos WHERE username = " + username + "' AND dinicio >= SYSDATE ORDER BY dinicio");
             
             //percorre os resultados da pesquisa e adiciona-os ao array
             while(rs.next()) {
@@ -329,7 +274,7 @@ public class DBCompanies {
                 event.put("id", rs.getString("EVENT_ID"));
                 event.put("nome", rs.getString("NOME"));
                 event.put("onde", rs.getString("ONDE"));
-                event.put("dinicio", rs.getString("DINICIO"));
+                event.put("dinicio", rs.getString("dinit"));
                 
                 events.put(event);
                 
