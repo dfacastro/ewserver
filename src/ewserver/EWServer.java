@@ -45,6 +45,10 @@ public class EWServer {
             System.out.println(dbm.sessions.add("dcastro", "hgjh2f65gdyhj"));
             System.out.println("SESSION: " + dbm.sessions.getUsername("hgjh2f65gdyhj"));
             
+            //get upcoming events
+            System.out.println("EVENTOS DO DIOGO: ");
+            System.out.println(dbm.companies.getUpcomingEvents("67").toString(3));
+            
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }

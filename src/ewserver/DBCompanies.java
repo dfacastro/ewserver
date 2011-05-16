@@ -255,6 +255,7 @@ public class DBCompanies {
             if(!rs.next())
                 return null;
             
+            
             //parse do username
             String username = rs.getString("USERNAME");
             String nome_emp = rs.getString("NOME_EMPRESA");
@@ -264,7 +265,7 @@ public class DBCompanies {
             
             //pesquisa os eventos do user ordenados pela data de inicio
             s = con.createStatement();
-            rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from eventos WHERE username = " + username + "' AND dinicio >= SYSDATE ORDER BY dinicio");
+            rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from evento WHERE username = '" + username + "' AND dinicio >= SYSDATE ORDER BY dinicio");
             
             //percorre os resultados da pesquisa e adiciona-os ao array
             while(rs.next()) {
@@ -274,7 +275,7 @@ public class DBCompanies {
                 event.put("id", rs.getString("EVENT_ID"));
                 event.put("nome", rs.getString("NOME"));
                 event.put("onde", rs.getString("ONDE"));
-                event.put("dinicio", rs.getString("dinit"));
+                event.put("dinicio", rs.getString("DINIT"));
                 
                 events.put(event);
                 

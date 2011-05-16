@@ -25,7 +25,8 @@ public class DBManager {
     DBCompanies companies = null;
     DBSessions sessions = null;
     DBAccounts accounts = null;
-
+    DBEvents events = null;
+    
     DBManager() {
         try {
             Class.forName("oracle.jdbc.driver.OracleDriver");
@@ -41,6 +42,7 @@ public class DBManager {
         companies = new DBCompanies(con);
         sessions = new DBSessions(con);
         accounts = new DBAccounts(con);
+        events = new DBEvents(con);
         System.out.println("Successfully connected to the remote database.");
     }
 
