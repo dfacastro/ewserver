@@ -42,7 +42,7 @@ public class DBAccounts {
             return true;
             
         } catch (SQLException ex) {
-            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
     }
@@ -95,7 +95,15 @@ public class DBAccounts {
      * @return 
      */
     public boolean alterPass(String username, String password) {
-        
+        try {
+			Statement s = con.createStatement();
+			s.execute("UPDATE empresas SET password "+ "'"+password+"'"+ " WHERE username = "+"'"+username+"'");
+			s.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
+			return false;
+		}
         return true;
     }
     

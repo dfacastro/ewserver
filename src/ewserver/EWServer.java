@@ -7,6 +7,8 @@ package ewserver;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,6 +50,16 @@ public class EWServer {
             //get upcoming events
             System.out.println("EVENTOS DO DIOGO: ");
             System.out.println(dbm.companies.getUpcomingEvents("67").toString(3));
+            
+            //teste DBEvents
+            System.out.println("--------- DBEvents --------------");
+            JSONArray js = new JSONArray();
+            js.put("81");
+            js.put("67");
+            System.out.println(""+dbm.events.findThisWeek(js).toString(3));
+            
+            
+            
             
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);

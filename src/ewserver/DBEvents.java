@@ -16,7 +16,6 @@ public class DBEvents {
     DBEvents(Connection c) {
         con = c;
     }
-
     /**
      * Funcao para aumentar o contador "marcacoes" da base de dados. 
      * @param ide id do evento
@@ -24,7 +23,8 @@ public class DBEvents {
     boolean check(String ide) {
         try {
             Statement s = con.createStatement();
-            s.executeQuery("UPDATE evento SET marcacoes = marcacoes + 1 WHERE id = " + ide);
+            s.executeQuery("UPDATE evento SET marcacoes = marcacoes + 1 WHERE event_id = " + ide);
+            
             s.close();
             return true;
         } catch (SQLException e) {
@@ -42,7 +42,7 @@ public class DBEvents {
     boolean uncheck(String ide) {
         try {
             Statement s = con.createStatement();
-            s.executeQuery("UPDATE evento SET marcacoes = marcacoes - 1 WHERE id = " + ide);
+            s.executeQuery("UPDATE evento SET marcacoes = marcacoes - 1 WHERE event_id = " + ide);
             s.close();
             return true;
         } catch (SQLException e) {
@@ -65,7 +65,7 @@ public class DBEvents {
         JSONArray evnts = new JSONArray();
         try {
             Statement s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dInicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dinicio AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio;");
+            ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dinicio AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
 
             //se nao forem encontrados resultados
             if (!rs.next()) {
@@ -73,7 +73,6 @@ public class DBEvents {
             }
 
             //adiciona eventos ao array
-            //emp_id
             do {
                 JSONObject jso = new JSONObject();
                 jso.put("id", rs.getString("EVENT_ID"));
@@ -84,9 +83,10 @@ public class DBEvents {
                 evnts.put(jso);
             } while (rs.next());
 
-
+            s.close();
+            rs.close();
         } catch (SQLException e) {
-            //e.printStackTrace();
+            e.printStackTrace();
             System.out.println("ERROR: Event find: SQL Exception.");
             return null;
         } catch (JSONException ex) {
@@ -97,9 +97,102 @@ public class DBEvents {
         return evnts;
     }
 
+    
+    /**
+     * 
+     * @return
+     */
     JSONArray findThisWeek() {
-        //TODO:
-        return new JSONArray();
+    	JSONArray evnts = new JSONArray();
+    	
+        try {
+			Statement s = con.createStatement();
+			ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username ORDER BY marcacoes DESC, dinicio");
+			
+			//se nao forem encontrados resultados
+            if (!rs.next()) {
+                return evnts;
+            }
+			
+            
+            do {
+                JSONObject jso = new JSONObject();
+                jso.put("id", rs.getString("EVENT_ID"));
+                jso.put("nome", rs.getString("NOME"));
+                jso.put("onde", rs.getString("ONDE"));
+                jso.put("dinicio", rs.getString("DINIT"));
+                jso.put("nome_emp", rs.getString("NOME_EMPRESA"));
+                evnts.put(jso);
+            } while (rs.next());
+				
+			s.close();
+			rs.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println("ERROR: Event findThisWeek: SQL Exception.");
+			return null;
+			//e.printStackTrace();
+		} catch (JSONException e) {
+			//e.printStackTrace();
+			System.out.println("ERROR: Event findThisWeek: JSON Exception.");
+			return null;
+		}
+
+        return evnts;
+    }
+    
+
+
+    /**
+     * 
+     * @param comps -> ["234", "827"]
+     * @return
+     */
+    JSONArray findThisWeek(JSONArray comps) {
+    	JSONArray evnts = new JSONArray();
+    	if(comps.length()==0) return evnts;
+    	
+        try {
+			Statement s = con.createStatement();
+			String query = "SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username AND empresas.emp_id IN (";
+			query +=comps.get(0);
+
+			for(int i = 1;i<comps.length();i++){
+				query += ","+comps.get(i);
+			}
+			query +=") ORDER BY marcacoes DESC, dinicio";
+			
+			ResultSet rs = s.executeQuery(query);
+			
+			//se nao forem encontrados resultados
+            if (!rs.next()) {
+                return evnts;
+            }
+			
+            
+            do {
+                JSONObject jso = new JSONObject();
+                jso.put("id", rs.getString("EVENT_ID"));
+                jso.put("nome", rs.getString("NOME"));
+                jso.put("onde", rs.getString("ONDE"));
+                jso.put("dinicio", rs.getString("DINIT"));
+                jso.put("nome_emp", rs.getString("NOME_EMPRESA"));
+                evnts.put(jso);
+            } while (rs.next());
+				
+			s.close();
+			rs.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			System.out.println("ERROR: Event findThisWeek: SQL Exception.");
+			//e.printStackTrace();
+			return null;
+		} catch (JSONException e) {
+			//e.printStackTrace();
+			System.out.println("ERROR: Event findThisWeek: JSON Exception.");
+			return null;
+		}
+        return evnts;
     }
 
     /**
@@ -144,8 +237,15 @@ public class DBEvents {
         return jso;
     }
 
+    
+    /**
+     * 
+     * @param idc
+     * @return
+     */
+    
     boolean importEvent(String idc) {
-        //TODO:
+        
         return true;
     }
 }
