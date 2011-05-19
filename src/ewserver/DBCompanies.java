@@ -198,38 +198,7 @@ public class DBCompanies {
         return true;
     }
     
-    public JSONArray find(String nome) {
-        JSONArray comps = new JSONArray();
-        try {
-            
-            //pesquisa os ids das empresas que correspondem ao critério de pesquisa
-            Statement s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT emp_id FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
-            
-            //retorna se nao forem encontrados resultados
-            if (!rs.next()) {
-                return null;
-            }
-            
-            //pesquisa a informacao de cada um dos resultados
-            do {
-                JSONObject jso = get(rs.getString("EMP_ID"), 0);
-                if (jso != null) {
-                    comps.put(jso);
-                } else {
-                    continue;
-                }
-            } while (rs.next());
-            
-            s.close();
-            rs.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
-        return comps;
-    }   
+    
 
     /**
      * Retorna um JSONArray com os proximos eventos (short) duma empresa ordenados pela data de inicio.

@@ -6,6 +6,7 @@ package ewserver;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Level;
@@ -19,13 +20,13 @@ import org.json.JSONObject;
  * @author Diogo
  */
 public class DBAccounts {
-    
+
     private Connection con = null;
-    
+
     DBAccounts(Connection c) {
         con = c;
     }
-    
+
     /**
      * Apaga a conta de uma empresa.
      * @param username
@@ -40,13 +41,13 @@ public class DBAccounts {
             s.executeQuery("DELETE FROM empresas WHERE username = '" + username + "'");
             s.close();
             return true;
-            
+
         } catch (SQLException ex) {
             //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
     }
-    
+
     /**
      * Cria uma nova conta
      * @param comp
@@ -55,7 +56,7 @@ public class DBAccounts {
     public boolean add(JSONObject acc) {
         String username = "";
         String pass = "";
-        
+
         try {
             username = acc.getString("username");
             pass = acc.getString("pass");
@@ -64,12 +65,12 @@ public class DBAccounts {
             System.out.println("ERROR: Add Account: Received malformed JSON.");
             return false;
         }
-        
+
         try {
             PreparedStatement ps = con.prepareStatement("INSERT INTO empresas(username, password) values(?, ?)");
             ps.setString(1, username);
             ps.setString(2, pass);
-            
+
             ps.execute();
             ps.close();
         } catch (SQLException ex) {
@@ -80,13 +81,13 @@ public class DBAccounts {
             }
             return false;
         }
-        
+
         System.out.println("Added new account   " + username + ":" + pass);
-        
+
         return true;
-        
+
     }
-    
+
     /**
      * Altera a password da conta indicada.
      * Retorna false em caso de erro.
@@ -96,29 +97,57 @@ public class DBAccounts {
      */
     public boolean alterPass(String username, String password) {
         try {
-			Statement s = con.createStatement();
-			s.execute("UPDATE empresas SET password "+ "'"+password+"'"+ " WHERE username = "+"'"+username+"'");
-			s.close();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-			return false;
-		}
+            Statement s = con.createStatement();
+            s.execute("UPDATE empresas SET password " + "'" + password + "'" + " WHERE username = " + "'" + username + "'");
+            s.close();
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            //e.printStackTrace();
+            return false;
+        }
         return true;
     }
-    
-    
+
     /**
-     * Pesquisa contas segundo o username (parcial/total) indicado.
+     * Pesquisa contas segundo o nome da empresa (parcial/total) indicado.
      * Retorna um array vazio caso não sejam encontrados resultados, ou null em caso de erro.
      * @param username
-     * @return 
+     * @return : JSONArray [{idc:"123", nome:"Empresa X", username:"user X"}, ...]
      */
-    public JSONArray find(String username) {
+    public JSONArray find(String nome) {
         JSONArray accounts = new JSONArray();
-        
-        
+        try {
+
+            //pesquisa os ids das empresas que correspondem ao critério de pesquisa
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
+
+            //retorna se nao forem encontrados resultados
+            if (!rs.next()) {
+                return null;
+            }
+            
+            do {
+                JSONObject js = new JSONObject();
+                js.put("idc", rs.getString("EMP_ID"));
+                js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null)? "" : rs.getString("NOME_EMPRESA") );
+                js.put("username", rs.getString("USERNAME"));
+                
+                accounts.put(js);
+            } while(rs.next());
+
+
+
+            s.close();
+            rs.close();
+
+        } catch (JSONException ex) {
+            Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
+			return null;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
         return accounts;
     }
-    
 }
