@@ -4,9 +4,14 @@
  */
 package ewserver;
 
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,11 +24,12 @@ import org.json.JSONObject;
 public class EWServer {
     
     static DBManager dbm = new DBManager();
+    static SecureRandom random = new SecureRandom();
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         try {
             // TODO code application logic here
             
@@ -61,7 +67,19 @@ public class EWServer {
             System.out.println(""+dbm.events.findThisWeek(js).toString(3));
             
             
+            // TESTE
             
+            //SecureRandom random = new SecureRandom();
+            //System.out.println("TESTE: " + new BigInteger(230, random).toString(32)); 
+            //System.out.println("TESTE: " + new BigInteger(330, random).toString(32));
+            /**
+             *  ------------------------------------ SERVER ----------------------------------------
+             */
+            
+            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 8);
+            
+            server.createContext("/accounts", new AccountsHandler());
+            server.start();
             
         } catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);

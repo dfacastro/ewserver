@@ -109,6 +109,39 @@ public class DBAccounts {
     }
 
     /**
+     * Verifica se o login está correcto
+     */
+    public boolean isValid(String username, String pass) {
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT password FROM empresas WHERE username = '" + username + "'");
+
+            //conta inexistente
+            if (!rs.next()) {
+                return false;
+            }
+
+            //username e password correctos
+            if (rs.getString("PASSWORD").equals(pass)) {
+                s.close();
+                rs.close();
+                return true;
+            }
+            else {      //password incorrecta
+                s.close();
+                rs.close();
+                return false;
+            }
+
+        } catch (SQLException ex) {
+            //Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: Account validation: SQL Exception.");
+            return false;
+        }
+
+    }
+
+    /**
      * Pesquisa contas segundo o nome da empresa (parcial/total) indicado.
      * Retorna um array vazio caso não sejam encontrados resultados, ou null em caso de erro.
      * @param username
@@ -126,15 +159,15 @@ public class DBAccounts {
             if (!rs.next()) {
                 return null;
             }
-            
+
             do {
                 JSONObject js = new JSONObject();
                 js.put("idc", rs.getString("EMP_ID"));
-                js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null)? "" : rs.getString("NOME_EMPRESA") );
+                js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
                 js.put("username", rs.getString("USERNAME"));
-                
+
                 accounts.put(js);
-            } while(rs.next());
+            } while (rs.next());
 
 
 
@@ -143,7 +176,7 @@ public class DBAccounts {
 
         } catch (JSONException ex) {
             Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
-			return null;
+            return null;
         } catch (SQLException ex) {
             Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
             return null;
