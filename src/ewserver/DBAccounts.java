@@ -98,7 +98,7 @@ public class DBAccounts {
     public boolean alterPass(String username, String password) {
         try {
             Statement s = con.createStatement();
-            s.execute("UPDATE empresas SET password " + "'" + password + "'" + " WHERE username = " + "'" + username + "'");
+            s.execute("UPDATE empresas SET password='" + password + "' WHERE username = '" + username + "'");
             s.close();
         } catch (SQLException e) {
             // TODO Auto-generated catch block
@@ -183,4 +183,16 @@ public class DBAccounts {
         }
         return accounts;
     }
+    
+    /**
+     * Retorna o tipo de utilizador correspondente (user/admin)
+     * @param username
+     * @return 
+     */
+    public String getType(String username) {
+        
+        // TODO: .
+        return "";
+    }
+    
 }

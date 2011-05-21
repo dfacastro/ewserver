@@ -6,6 +6,7 @@ package ewserver;
 
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Iterator;
@@ -71,7 +72,7 @@ public class EWServer {
             
             //SecureRandom random = new SecureRandom();
             //System.out.println("TESTE: " + new BigInteger(230, random).toString(32)); 
-            //System.out.println("TESTE: " + new BigInteger(330, random).toString(32));
+            //System.out.println("TESTE: " + new BigInteger(50, random).toString(32));
             /**
              *  ------------------------------------ SERVER ----------------------------------------
              */
