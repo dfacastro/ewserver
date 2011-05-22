@@ -53,6 +53,7 @@ public class CompaniesHandler implements HttpHandler {
 
             String token = he.getRequestHeaders().getFirst("token");
 
+            /*
             //token não presente nos headers - access forbidden
             if (token == null) {
                 he.sendResponseHeaders(403, 0);
@@ -62,7 +63,15 @@ public class CompaniesHandler implements HttpHandler {
 
             //token inválida - access forbidden
             String username = EWServer.dbm.sessions.getUsername(token);
-            if (username != null) {
+            if (username == null) {
+                he.sendResponseHeaders(403, 0);
+                send("", he);
+                return;
+            }*/
+            
+            //valida a token
+            String username = validate(token);
+            if(username == null) {
                 he.sendResponseHeaders(403, 0);
                 send("", he);
                 return;
@@ -168,7 +177,23 @@ public class CompaniesHandler implements HttpHandler {
                 }
             } // OPER - GETCOMPANY
             else if (oper.equals("getcompany")) {
-                //TODO: .
+                String token = he.getRequestHeaders().getFirst("token");
+                String username = validate(token);
+
+                // token/sessao invalida
+                if (username == null) {
+                    he.sendResponseHeaders(403, 0);
+                    send("", he);
+                    return;
+                }
+                String company_idc = EWServer.dbm.companies.getIDC(username);
+                
+                JSONObject company = EWServer.dbm.companies.get(company_idc, 2);
+                
+                he.sendResponseHeaders(HttpURLConnection.HTTP_OK, company.toString().length());
+                send(company.toString(), he);
+                return;
+                
             } // OPER -INVALIDO
             else {
                 he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
@@ -200,5 +225,23 @@ public class CompaniesHandler implements HttpHandler {
         } catch (IOException ex) {
             Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    /**
+     * Valida a token indicada, retornando o username correspondente a' sessao.
+     * Caso a validação nao tenha sucesso (token nula ou sessao invalida).
+     *  e' retornado o valor null.
+     * 
+     * @param token
+     * @return 
+     */
+    private String validate(String token) {
+
+        //token não presente nos headers - access forbidden
+        if (token == null) {
+            return null;
+        }
+
+        return EWServer.dbm.sessions.getUsername(token);
     }
 }

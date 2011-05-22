@@ -300,4 +300,16 @@ public class DBCompanies {
         }
         return comps;
     }
+
+    /**
+     * Devolve o id da empresa correspondente ao username indicado
+     * @param username
+     * @return 
+     */
+    public String getIDC(String username) {
+        /**
+         * TODO: -
+         */
+        return "";
+    }
 }
