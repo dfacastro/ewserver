@@ -147,7 +147,7 @@ public class DBAccounts {
      * @param username
      * @return : JSONArray [{idc:"123", nome:"Empresa X", username:"user X"}, ...]
      */
-    public JSONArray find(String nome) {
+    public JSONArray findByName(String nome) {
         JSONArray accounts = new JSONArray();
         try {
 
@@ -155,21 +155,14 @@ public class DBAccounts {
             Statement s = con.createStatement();
             ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
 
-            //retorna se nao forem encontrados resultados
-            if (!rs.next()) {
-                return null;
-            }
-
-            do {
+             while (rs.next()) {
                 JSONObject js = new JSONObject();
                 js.put("idc", rs.getString("EMP_ID"));
                 js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
                 js.put("username", rs.getString("USERNAME"));
 
                 accounts.put(js);
-            } while (rs.next());
-
-
+            }
 
             s.close();
             rs.close();
@@ -193,6 +186,12 @@ public class DBAccounts {
         
         // TODO: .
         return "";
+    }
+    
+    public boolean exists(String username) {
+        
+        //TODO: -
+        return true;
     }
     
 }

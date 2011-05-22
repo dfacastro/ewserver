@@ -17,6 +17,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
+import org.json.JSONArray;
 
 /**
  *
@@ -31,6 +32,10 @@ public class AccountsHandler implements HttpHandler {
             handlePost(he);
         } else if (he.getRequestMethod().toLowerCase().equals("put")) {
             handlePut(he);
+        } else if (he.getRequestMethod().toLowerCase().equals("get")) {
+            handleGet(he);
+        } else if (he.getRequestMethod().toLowerCase().equals("delete")) {
+            handleDelete(he);
         }
 
     }
@@ -39,7 +44,7 @@ public class AccountsHandler implements HttpHandler {
      * Handler do método POST : logins e reset de passwords
      * @param he 
      */
-    public void handlePost(HttpExchange he) {
+    private void handlePost(HttpExchange he) {
         InputStream is = he.getRequestBody();
         JSONObject body;
 
@@ -160,30 +165,30 @@ public class AccountsHandler implements HttpHandler {
      *  200 OK: sucesso
      * @param he 
      */
-    public void handlePut(HttpExchange he) {
+    private void handlePut(HttpExchange he) {
         try {
             InputStream is = he.getRequestBody();
             JSONObject body = new JSONObject(read(is));
             String response = "";
 
             String token = he.getRequestHeaders().getFirst("token");
-            
+
             //session token não presente - access forbidden
             if (token == null || token.equals("")) {
                 he.sendResponseHeaders(403, response.length());
                 send(response, he);
                 return;
             }
-            
+
             String admin_username = EWServer.dbm.sessions.getUsername(token);
-            
+
             //session token inválida - access forbidden
             if (admin_username == null) {
                 he.sendResponseHeaders(403, response.length());
                 send(response, he);
                 return;
             }
-            
+
             //sessão nao pertence a um admin - access forbidden
             String tipo = EWServer.dbm.accounts.getType(admin_username);
             if (!tipo.equals("admin")) {
@@ -191,18 +196,17 @@ public class AccountsHandler implements HttpHandler {
                 send(response, he);
                 return;
             }
-            
+
             String pass = new BigInteger(50, EWServer.random).toString(32);
             body.put("pass", pass);
-            
+
             //em caso de sucesso...
-            if(EWServer.dbm.accounts.add(body)) {
+            if (EWServer.dbm.accounts.add(body)) {
                 he.sendResponseHeaders(403, response.length());
                 response += body.toString();
                 send(response, he);
                 return;
-            }
-            //caso o username já exista -  409 CONFLICT
+            } //caso o username já exista -  409 CONFLICT
             else {
                 he.sendResponseHeaders(HttpURLConnection.HTTP_CONFLICT, response.length());
                 send(response, he);
@@ -219,6 +223,163 @@ public class AccountsHandler implements HttpHandler {
 
     }
 
+    /**
+     * Handler do método GET.
+     * Usado para pesquisar contas - acesso restrito a admins - por nome da respectiva
+     * empresa, pelo username ou sem parametros.
+     * 
+     * 200 OK
+     * 400 BAD REQUEST: missing query
+     * 403 ACCESS FORBIDDEN: token nao presente no header / token inválida / o user nao é um admin
+     * 204 NO CONTENT: nao foram encontrados resultados
+     * @param he 
+     */
+    private void handleGet(HttpExchange he) {
+        try {
+            InputStream is = he.getRequestBody();
+            JSONObject body;
+            String response = "";
+            String oper = "";
+            JSONArray results = new JSONArray();
+
+            //lê body e oper
+            String body_str = read(is);
+            if (!body_str.equals("")) {
+                body = new JSONObject(body_str);
+                oper = body.getString("oper");
+            }
+
+            //processa token
+            String token = he.getRequestHeaders().getFirst("token");
+
+            //verifica validade da token
+            if (!isAdmin(token)) {
+                he.sendResponseHeaders(403, response.length());
+                send(response, he);
+                return;
+            }
+
+            //lê argumentos
+            String[] args = new String[0];
+            if (he.getRequestURI().getQuery() != null) {
+                args = he.getRequestURI().getQuery().split("&");
+            }
+            String query = "";
+            for (int i = 0; i < args.length; i++) {
+                if (args[i].split("=")[0].toLowerCase().equals("q")) {
+                    query = args[i].split("=")[1];
+                    break;
+                }
+            }
+
+            //se a query nao for especificada...
+            if (query.equals("")) {
+                results = EWServer.dbm.accounts.findByName(query);
+            } //se a pesquisa for por nome...
+            else if (oper.equals("by_name")) {
+                results = EWServer.dbm.accounts.findByName(query);
+            } //se a pesquisa for por username...
+            else if (oper.equals("by_username")) {
+                /**
+                 * TODO: implementar find by username
+                 */
+            } //se existir query, mas nao for indicado o oper
+            else {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, response.length());
+                send(response, he);
+                return;
+            }
+
+            //Retorna os resultados encontrados
+            if (results.length() == 0) {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_NO_CONTENT, 0);
+                send("", he);
+                return;
+            } else {
+                response = results.toString();
+                he.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
+                send(response, he);
+                return;
+            }
+
+        } catch (JSONException ex) {
+            Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Handler do método DELETE.
+     * Usado para apagar contas - acesso restrito a admins
+     * 
+     * 200 OK
+     * 400 BAD REQUEST: missing query
+     * 404 NOT FOUND: username indicado nao foi encontrado
+     * 403 ACCESS FORBIDDEN: token nao presente no header / token inválida / o user nao é um admin
+     * 500 INTERNAL ERROR: erro
+     * @param he 
+     */
+    private void handleDelete(HttpExchange he) {
+        try {
+            //processa token
+            String token = he.getRequestHeaders().getFirst("token");
+
+            //verifica validade da token
+            if (!isAdmin(token)) {
+                he.sendResponseHeaders(403, 0);
+                send("", he);
+                return;
+            }
+
+            //lê argumentos
+            String[] args = new String[0];
+            if (he.getRequestURI().getQuery() != null) {
+                args = he.getRequestURI().getQuery().split("&");
+            } 
+            
+            String username = "";
+            for (int i = 0; i < args.length; i++) {
+                if (args[i].split("=")[0].toLowerCase().equals("user")) {
+                    username = args[i].split("=")[1];
+                    break;
+                }
+            }
+            
+            //se o username a apagar não for indicado - bad request
+            if(username.equals("")) {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
+                send("", he);
+                return;
+            }
+            
+            //username não encontrado
+            if(!EWServer.dbm.accounts.exists(username)) {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, 0);
+                send("", he);
+                return;
+            }
+            
+            //em caso de sucesso
+            if(EWServer.dbm.accounts.delete(username)) {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                send("", he);
+                return;
+            }
+            //em caso de erro
+            else {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
+                send("", he);
+                return;
+            }
+            
+
+
+        } catch (IOException ex) {
+            Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
     private static String read(InputStream in) throws IOException {
         StringBuilder sb = new StringBuilder();
         BufferedReader r = new BufferedReader(new InputStreamReader(in), 1000);
@@ -231,6 +392,7 @@ public class AccountsHandler implements HttpHandler {
 
     private void send(String response, HttpExchange he) {
         try {
+            System.out.println("RESP: " + response);
             OutputStream os = he.getResponseBody();
 
             os.write(response.getBytes());
@@ -238,5 +400,28 @@ public class AccountsHandler implements HttpHandler {
         } catch (IOException ex) {
             Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    private boolean isAdmin(String token) {
+
+        //session token não presente
+        if (token == null || token.equals("")) {
+            return false;
+        }
+
+        String admin_username = EWServer.dbm.sessions.getUsername(token);
+
+        //session token inválida
+        if (admin_username == null) {
+            return false;
+        }
+
+        //sessão nao pertence a um admin
+        String tipo = EWServer.dbm.accounts.getType(admin_username);
+        if (!tipo.equals("admin")) {
+            return false;
+        }
+
+        return true;
     }
 }

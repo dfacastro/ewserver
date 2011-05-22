@@ -45,7 +45,7 @@ public class EWServer {
             System.out.println(dbm.companies.get("67", 0).toString(3));
             
             System.out.println("------ ACCOUNTS FIND ------------");
-            System.out.println(dbm.accounts.find("comp").toString(3));
+            System.out.println(dbm.accounts.findByName("comp").toString(3));
             
             //update - muda o nome da cidade da empresa no. 67
             JSONObject j = dbm.companies.get("67", 2);
