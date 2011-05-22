@@ -20,14 +20,12 @@ import org.json.JSONObject;
  * @author Diogo
  */
 public class DBCompanies {
-    
+
     private Connection con = null;
-    
+
     DBCompanies(Connection c) {
         con = c;
     }
-    
-
 
     /**
      * Devolve o JSONObject correspondente à empresa indicada.
@@ -41,17 +39,17 @@ public class DBCompanies {
      */
     public JSONObject get(String idc, int mode) {
         JSONObject comp = new JSONObject();
-        
+
         try {
-            
+
             Statement s = con.createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM empresas WHERE emp_id = " + idc);
 
             //não existem empresas com o id indicado
             if (!rs.next()) {
-                return null;
+                return comp;
             }
-            
+
             String username = rs.getString("USERNAME");
 
             //construcao do objecto JSON da empresa
@@ -67,45 +65,45 @@ public class DBCompanies {
                     comp.put("gc_password", (rs.getString("GC_PASSWORD") == null) ? "" : rs.getString("GC_PASSWORD"));
                     comp.put("gc_nome", (rs.getString("GC_NOME") == null) ? "" : rs.getString("GC_NOME"));
                 }
-                
+
                 if (mode == 1 || mode == 2) {
                     comp.put("descricao", (rs.getString("DESCRICAO") == null) ? "" : rs.getString("DESCRICAO"));
                     comp.put("morada", (rs.getString("MORADA") == null) ? "" : rs.getString("MORADA"));
 
                     //JSONArray com os telefones
                     JSONArray tels = new JSONArray();
-                    
+
                     rs = s.executeQuery("SELECT * FROM tels WHERE username = '" + username + "'");
-                    
+
                     while (rs.next()) {
                         tels.put(rs.getInt("TELEFONE"));
                     }
-                    
+
                     comp.put("telefones", tels);
                 }
-                
+
             } catch (JSONException ex) {
                 Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("ERROR: Get Company: malformed JSON.");
                 return null;
             }
-            
-            
+
+
             s.close();
             rs.close();
-            
+
         } catch (SQLException ex) {
             Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
-        
+
         return comp;
     }
-    
+
     public boolean update(JSONObject comp, String username) {
         String updtStatement = "UPDATE empresas SET";
         boolean foundFirst = false;
-        
+
         try {
             //verifica se os seguintes atributos existem no objecto
             //caso existam, adiciona-os ao update statement para serem actualizados
@@ -115,7 +113,7 @@ public class DBCompanies {
                     updtStatement += " NOME_EMPRESA='" + comp.getString("nome") + "'";
                 }
             }
-            
+
             if (comp.has("morada")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -124,7 +122,7 @@ public class DBCompanies {
                 }
                 updtStatement += " MORADA='" + comp.getString("morada") + "'";
             }
-            
+
             if (comp.has("cidade")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -133,7 +131,7 @@ public class DBCompanies {
                 }
                 updtStatement += " CIDADE='" + comp.getString("cidade") + "'";
             }
-            
+
             if (comp.has("descricao")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -142,7 +140,7 @@ public class DBCompanies {
                 }
                 updtStatement += " DESCRICAO='" + comp.getString("descricao") + "'";
             }
-            
+
             if (comp.has("gc_nome")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -151,7 +149,7 @@ public class DBCompanies {
                 }
                 updtStatement += " GC_NOME='" + comp.getString("gc_nome") + "'";
             }
-            
+
             if (comp.has("gc_username")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -160,7 +158,7 @@ public class DBCompanies {
                 }
                 updtStatement += " GC_USERNAME='" + comp.getString("gc_username") + "'";
             }
-            
+
             if (comp.has("gc_password")) {
                 if (foundFirst) {
                     updtStatement += ",";
@@ -174,15 +172,14 @@ public class DBCompanies {
              * TODO: telefones
              * password?
              */
-            
             //nada para actualizar
             if (!foundFirst) {
                 return true;
             }
-            
+
             Statement s = con.createStatement();
             s.executeQuery(updtStatement + " WHERE USERNAME = '" + username + "'");
-            
+
             s.close();
         } catch (JSONException ex) {
             //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
@@ -193,12 +190,10 @@ public class DBCompanies {
             System.out.println("ERROR: Update Company: Could not update company info.");
             return false;
         }
-        
+
         //System.out.println("STATEMENT: " + updtStatement + " WHERE USERNAME = '" + username + "'");
         return true;
     }
-    
-    
 
     /**
      * Retorna um JSONArray com os proximos eventos (short) duma empresa ordenados pela data de inicio.
@@ -208,48 +203,49 @@ public class DBCompanies {
      * @return 
      */
     public JSONArray getUpcomingEvents(String idc) {
-        
+
         /**
          * TODO: testar
          */
         JSONArray events = new JSONArray();
-        
+
         try {
-            
+
             //pesquisa o username corresponde ao ID indicado
             Statement s = con.createStatement();
             ResultSet rs = s.executeQuery("SELECT username, nome_empresa FROM empresas WHERE emp_id = '" + idc + "'");
-            
+
             //empresa nao existe
-            if(!rs.next())
+            if (!rs.next()) {
                 return null;
-            
-            
+            }
+
+
             //parse do username
             String username = rs.getString("USERNAME");
             String nome_emp = rs.getString("NOME_EMPRESA");
-            
+
             s.close();
             rs.close();
-            
+
             //pesquisa os eventos do user ordenados pela data de inicio
             s = con.createStatement();
             rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from evento WHERE username = '" + username + "' AND dinicio >= SYSDATE ORDER BY dinicio");
-            
+
             //percorre os resultados da pesquisa e adiciona-os ao array
-            while(rs.next()) {
+            while (rs.next()) {
                 JSONObject event = new JSONObject();
-                
+
                 event.put("nome_emp", nome_emp);
                 event.put("id", rs.getString("EVENT_ID"));
                 event.put("nome", rs.getString("NOME"));
                 event.put("onde", rs.getString("ONDE"));
                 event.put("dinicio", rs.getString("DINIT"));
-                
+
                 events.put(event);
-                
+
             }
-            
+
             s.close();
             rs.close();
         } catch (JSONException ex) {
@@ -261,7 +257,47 @@ public class DBCompanies {
             System.out.println("ERROR: Upcoming Events: SQL exception.");
             return null;
         }
-        
+
         return events;
+    }
+
+    
+    
+    /**
+     * Pesquisa empresas pelo nome e retorna um JSONArray com os resultados encontrados
+     * @param nome
+     * @return 
+     */
+    public JSONArray find(String nome) {
+        JSONArray comps = new JSONArray();
+        try {
+
+            //pesquisa os ids das empresas que correspondem ao critério de pesquisa
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT emp_id FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
+
+            //retorna se nao forem encontrados resultados
+            if (!rs.next()) {
+                return comps;
+            }
+
+            //pesquisa a informacao de cada um dos resultados
+            do {
+                JSONObject jso = get(rs.getString("EMP_ID"), 0);
+                if (jso != null) {
+                    comps.put(jso);
+                } else {
+                    continue;
+                }
+            } while (rs.next());
+
+            s.close();
+            rs.close();
+
+        } catch (SQLException ex) {
+            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        return comps;
     }
 }

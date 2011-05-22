@@ -80,6 +80,7 @@ public class EWServer {
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 8);
             
             server.createContext("/accounts", new AccountsHandler());
+            server.createContext("/companies", new CompaniesHandler());
             server.start();
             
         } catch (JSONException ex) {
