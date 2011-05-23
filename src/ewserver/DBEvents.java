@@ -244,8 +244,11 @@ public class DBEvents {
      * @return
      */
     
-    boolean importEvent(String idc) {
-        
+    boolean importEvent(String idc, int months) {
+        if(months == -1)
+        	months = 2;
+    	
+    	
         return true;
     }
 }
