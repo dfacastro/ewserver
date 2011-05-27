@@ -31,8 +31,7 @@ public class EWServer {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        try {
-            // TODO code application logic here
+        /*try {
             
             JSONObject js = new JSONObject();
             js.put("username", "user1");
@@ -67,6 +66,8 @@ public class EWServer {
             js.put("67");
             System.out.println(""+dbm.events.findThisWeek(js).toString(3));
             
+         * 
+         */
             
             // TESTE
             
@@ -84,9 +85,9 @@ public class EWServer {
             //server.createContext("/events", new EventsHandler());
             server.start();
             
-        } catch (JSONException ex) {
+        /*} catch (JSONException ex) {
             Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-                
+             */   
     }
 }

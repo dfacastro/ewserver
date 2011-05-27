@@ -167,11 +167,16 @@ public class DBCompanies {
                 }
                 updtStatement += " GC_PASSWORD='" + comp.getString("gc_password") + "'";
             }
+            
+            if (comp.has("password")) {
+                if (foundFirst) {
+                    updtStatement += ",";
+                } else {
+                    foundFirst = true;
+                }
+                updtStatement += " PASSWORD='" + comp.getString("password") + "'";
+            }
 
-            /**
-             * TODO: telefones
-             * password?
-             */
             //nada para actualizar
             if (!foundFirst) {
                 return true;
@@ -181,6 +186,10 @@ public class DBCompanies {
             s.executeQuery(updtStatement + " WHERE USERNAME = '" + username + "'");
 
             s.close();
+            
+            if(comp.has("telefones"))
+                updateTels(comp.getJSONArray("telefones"), username);
+            
         } catch (JSONException ex) {
             //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("ERROR: Update Company: Received malformed JSON.");
@@ -307,9 +316,52 @@ public class DBCompanies {
      * @return 
      */
     public String getIDC(String username) {
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT emp_id FROM empresas WHERE username ='" + username + "'");
+            
+            if(!rs.next())
+                return null;
+            
+            return rs.getString("EMP_ID");
+        } catch (SQLException ex) {
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: DBCompanies getIDC: SQL Exception.");
+            return null;
+        }
+    }
+
+    /**
+     * Actualiza os telefones duma empresa
+     * @param jSONArray 
+     */
+    private void updateTels(JSONArray tels, String username) {
         /**
-         * TODO: -
+         * TODO: testar
          */
-        return "";
+        try {
+            Statement s = con.createStatement();
+            s.executeQuery("DELETE FROM telefones WHERE username = '" + username + "'");
+            
+            if(tels.length() == 0)
+                return;
+            
+            String updtStatement = "INSERT ALL ";
+            for(int i = 0; i < tels.length(); i++)
+                updtStatement += "INTO tels VALUES('" + username + "' , " + tels.getString(i) + ") ";
+            updtStatement += "SELECT * from DUAL";
+            
+            s.executeQuery(updtStatement);
+            
+        } catch (JSONException ex) {
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: DBCompanies updateTels: JSON Exception");
+        } catch (SQLException ex) {
+            //Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: DBCompanies updateTels: SQLException");
+            return;
+        }
+        
+        
     }
 }

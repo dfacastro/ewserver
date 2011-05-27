@@ -183,15 +183,78 @@ public class DBAccounts {
      * @return 
      */
     public String getType(String username) {
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT tipo_conta FROM empresas WHERE username = '" + username + "'");
+            
+            if(!rs.next())
+                return null;
+            
+            return rs.getString("TIPO_CONTA");
+        } catch (SQLException ex) {
+            Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
         
-        // TODO: .
-        return "";
     }
     
+    /**
+     * Verifica se existe alguma conta com o username indicado
+     * @param username
+     * @return 
+     */
     public boolean exists(String username) {
-        
-        //TODO: -
-        return true;
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT * FROM empresas WHERE username = '" + username + "'");
+            
+            if(!rs.next())
+                return false;
+            else
+                return true;
+            
+        } catch (SQLException ex) {
+            //Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("ERROR: DBAccounts exists: SQL Exception");
+            return false;
+        }
+    }
+    
+    
+    /**
+     * Pesquisa contas segundo o username da conta (parcial/total) indicado.
+     * Retorna um array vazio caso não sejam encontrados resultados, ou null em caso de erro.
+     * @param username
+     * @return : JSONArray [{idc:"123", nome:"Empresa X", username:"user X"}, ...]
+     */
+    public JSONArray findByUsername(String username) {
+        JSONArray accounts = new JSONArray();
+        try {
+
+            //pesquisa os ids das empresas que correspondem ao critério de pesquisa
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username FROM empresas WHERE lower(username) LIKE '%" + username.toLowerCase() + "%'");
+
+             while (rs.next()) {
+                JSONObject js = new JSONObject();
+                js.put("idc", rs.getString("EMP_ID"));
+                js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
+                js.put("username", rs.getString("USERNAME"));
+
+                accounts.put(js);
+            }
+
+            s.close();
+            rs.close();
+
+        } catch (JSONException ex) {
+            Logger.getLogger(DBAccounts.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBCompanies.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        return accounts;
     }
     
 }

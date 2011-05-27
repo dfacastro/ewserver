@@ -242,13 +242,6 @@ public class AccountsHandler implements HttpHandler {
             String oper = "";
             JSONArray results = new JSONArray();
 
-            //lê body e oper
-            String body_str = read(is);
-            if (!body_str.equals("")) {
-                body = new JSONObject(body_str);
-                oper = body.getString("oper");
-            }
-
             //processa token
             String token = he.getRequestHeaders().getFirst("token");
 
@@ -268,7 +261,9 @@ public class AccountsHandler implements HttpHandler {
             for (int i = 0; i < args.length; i++) {
                 if (args[i].split("=")[0].toLowerCase().equals("q")) {
                     query = args[i].split("=")[1];
-                    break;
+                }
+                else if(args[i].split("=")[0].toLowerCase().equals("oper")) {
+                    oper = args[i].split("=")[1];
                 }
             }
 
@@ -280,9 +275,7 @@ public class AccountsHandler implements HttpHandler {
                 results = EWServer.dbm.accounts.findByName(query);
             } //se a pesquisa for por username...
             else if (oper.equals("by_username")) {
-                /**
-                 * TODO: implementar find by username
-                 */
+                results = EWServer.dbm.accounts.findByUsername(query);
             } //se existir query, mas nao for indicado o oper
             else {
                 he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, response.length());
@@ -302,9 +295,9 @@ public class AccountsHandler implements HttpHandler {
                 return;
             }
 
-        } catch (JSONException ex) {
+        } /*catch (JSONException ex) {
             Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
+        }*/ catch (IOException ex) {
             Logger.getLogger(AccountsHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -392,7 +385,6 @@ public class AccountsHandler implements HttpHandler {
 
     private void send(String response, HttpExchange he) {
         try {
-            System.out.println("RESP: " + response);
             OutputStream os = he.getResponseBody();
 
             os.write(response.getBytes());
