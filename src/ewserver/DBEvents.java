@@ -65,7 +65,15 @@ public class DBEvents {
         JSONArray evnts = new JSONArray();
         try {
             Statement s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dinicio AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
+            ResultSet rs = null;
+            if(dInicio.equals("") && dFim.equals(""))
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND evento.username = empresas.username ORDER BY dinicio");
+            else if(dInicio.equals(""))
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
+            else if(dFim.equals(""))
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dfim AND evento.username = empresas.username ORDER BY dinicio");
+            else
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dfim AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
 
             //se nao forem encontrados resultados
             if (!rs.next()) {
