@@ -82,7 +82,7 @@ public class EWServer {
             
             server.createContext("/accounts", new AccountsHandler());
             server.createContext("/companies", new CompaniesHandler());
-            //server.createContext("/events", new EventsHandler());
+            server.createContext("/events", new EventsHandler());
             server.start();
             
         /*} catch (JSONException ex) {
