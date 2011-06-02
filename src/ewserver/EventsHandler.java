@@ -200,7 +200,7 @@ public class EventsHandler implements HttpHandler{
                 return;
             }
             
-            String ide = body.getString("ide");
+            String ide = "";// = body.getString("ide");
             String oper = body.getString("oper");
             
             if(ide == null || oper == null){
@@ -232,12 +232,13 @@ public class EventsHandler implements HttpHandler{
         	    		send("", he);
         	    		return;
             		}
-            	}else if(oper.equals("sync")){
+            	}else if(oper.equals("import")){
             		/**
             		 * TODO: sync
             		 */
             		if(EWServer.dbm.events.importEvent(ide, -1)){
-            			
+                            he.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                            send("", he);
             		}
             		else{
         	       		he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
