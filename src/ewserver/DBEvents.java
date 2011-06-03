@@ -307,7 +307,7 @@ public class DBEvents {
 			}
 			
 			if(idCalendario.equals("")) {
-				System.out.println("Calendario do utilizador não encontrado.");
+				System.out.println("Calendario do utilizador nï¿½o encontrado.");
 				return false; //calendario nao encontrado.
 			}
 			
@@ -383,5 +383,44 @@ public class DBEvents {
 			return false;
 		}
         return false;
+    }
+    
+        ArrayList<String> findGcIds (String username) {
+        ArrayList<String> ids = new ArrayList<String>();
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT  gc_id FROM evento WHERE username = '" + username + "'");
+            
+            while(rs.next())
+                ids.add(rs.getString("GC_ID"));
+            
+            s.close();
+            rs.close();
+            return ids;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBEvents.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        
+    }
+    
+    String findDAlteracao(String gc_id) {
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT dalteracao FROM evento WHERE gc_id = '" + gc_id + "'");
+            
+            if(!rs.next())
+                return null;
+            
+            String dalteracao = rs.getString("DALTERACAO");
+            
+            s.close();
+            rs.close();
+            return dalteracao;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(DBEvents.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 }
