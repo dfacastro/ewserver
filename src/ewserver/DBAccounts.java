@@ -153,13 +153,14 @@ public class DBAccounts {
 
             //pesquisa os ids das empresas que correspondem ao critério de pesquisa
             Statement s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
+            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username, tipo_conta FROM empresas WHERE lower(NOME_EMPRESA) LIKE '%" + nome.toLowerCase() + "%'");
 
              while (rs.next()) {
                 JSONObject js = new JSONObject();
                 js.put("idc", rs.getString("EMP_ID"));
                 js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
                 js.put("username", rs.getString("USERNAME"));
+                js.put("tipo_conta", rs.getString("TIPO_CONTA"));
 
                 accounts.put(js);
             }
@@ -225,7 +226,7 @@ public class DBAccounts {
      * Pesquisa contas segundo o username da conta (parcial/total) indicado.
      * Retorna um array vazio caso não sejam encontrados resultados, ou null em caso de erro.
      * @param username
-     * @return : JSONArray [{idc:"123", nome:"Empresa X", username:"user X"}, ...]
+     * @return : JSONArray [{idc:"123", nome:"Empresa X", username:"user X", tipo_conta: "user"}, ...]
      */
     public JSONArray findByUsername(String username) {
         JSONArray accounts = new JSONArray();
@@ -233,14 +234,15 @@ public class DBAccounts {
 
             //pesquisa os ids das empresas que correspondem ao critério de pesquisa
             Statement s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username FROM empresas WHERE lower(username) LIKE '%" + username.toLowerCase() + "%'");
+            ResultSet rs = s.executeQuery("SELECT emp_id, nome_empresa, username, tipo_conta FROM empresas WHERE lower(username) LIKE '%" + username.toLowerCase() + "%'");
 
              while (rs.next()) {
                 JSONObject js = new JSONObject();
                 js.put("idc", rs.getString("EMP_ID"));
                 js.put("nome_emp", (rs.getString("NOME_EMPRESA") == null) ? "" : rs.getString("NOME_EMPRESA"));
                 js.put("username", rs.getString("USERNAME"));
-
+                js.put("tipo_conta", rs.getString("TIPO_CONTA"));
+                
                 accounts.put(js);
             }
 
