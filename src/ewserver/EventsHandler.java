@@ -23,7 +23,6 @@ public class EventsHandler implements HttpHandler{
 
 	@Override
 	public void handle(HttpExchange he) throws IOException {
-		
 		if (he.getRequestMethod().toLowerCase().equals("post")) {
             handlePost(he);
         }  else if (he.getRequestMethod().toLowerCase().equals("get")) {
@@ -49,7 +48,7 @@ public class EventsHandler implements HttpHandler{
             args = he.getRequestURI().getQuery().split("&");
         }
 		try {
-			String oper = "", idc = "", ide = "", dinicio = "", dfim = "", onde = "", nome = "";
+			String oper = "", idc = "", ide = "", dinicio = "", dfim = "", onde = "", nome = "", empresa = "", descricao = "";
 			JSONArray comps = new JSONArray();
 			 for (int i = 0; i < args.length; i++) {
 				 String[] tokens = args[i].split("=");
@@ -74,6 +73,10 @@ public class EventsHandler implements HttpHandler{
 					 nome = tokens[1];
 				 }  else if(tokens[0].equals("comps")){
 					 comps.put(tokens[1]);
+				 } else if(tokens[0].equals("empresa")) {
+					 empresa = tokens[1];
+				 }else if(tokens[0].equals("descricao")) {
+					 descricao = tokens[1];
 				 }
 				 
 			 }
@@ -129,8 +132,8 @@ public class EventsHandler implements HttpHandler{
 	        		 return;	        		 
 	        	 }
 	        	 
-	         } else if(oper.equals("searchevent")){//oper=searchevent&dinicio=DI&dfim=DF&onde=ONDE&nome=NOME
-	        	 JSONArray searchEvent =  EWServer.dbm.events.find(dinicio,dfim, onde, nome);
+	         } else if(oper.equals("searchevent")){//oper=searchevent&dinicio=DI&dfim=DF&onde=ONDE&nome=NOME&descricao=DESC&empresa=EMP
+	        	 JSONArray searchEvent =  EWServer.dbm.events.find(dinicio,dfim, onde, nome, empresa, descricao);
 	        	 
 	        	 if(searchEvent == null){
 	        		 he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
@@ -192,15 +195,7 @@ public class EventsHandler implements HttpHandler{
         try {
         	InputStream is = he.getRequestBody();
 			JSONObject body = new JSONObject(read(is));
-			String token = he.getRequestHeaders().getFirst("token");
 			
-			//validar username token
-            String username = validate(token);
-            if(username == null) {
-                he.sendResponseHeaders(403, 0);
-                send("", he);
-                return;
-            }
             
             String ide = null;
             String oper = null;
@@ -239,15 +234,28 @@ public class EventsHandler implements HttpHandler{
         	    		return;
             		}
             	}else if(oper.equals("import")){
+            		String token = he.getRequestHeaders().getFirst("token");
+        			
+        			//validar username token
+                    String username = validate(token);
+	                if(username == null) {
+	                        he.sendResponseHeaders(403, 0);
+	                        send("", he);
+	                        return;
+                    }
             		/**
             		 * TODO: sync
             		 */
-            		if(EWServer.dbm.events.importEvent(ide)){
-            			
+            		if(EWServer.dbm.events.importEvent(username)){
+            			System.out.println("Import feito com sucesso.");
+                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                        send("", he);
+                        return;
             		}
             		else{
         	       		he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
         	    		send("", he);
+        	    		System.out.println("Erro no import.");
         	    		return;
             		}
             	}

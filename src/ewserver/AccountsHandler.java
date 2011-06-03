@@ -27,7 +27,7 @@ public class AccountsHandler implements HttpHandler {
 
     @Override
     public void handle(HttpExchange he) throws IOException {
-
+    	System.out.println("Pedido");
         if (he.getRequestMethod().toLowerCase().equals("post")) {
             handlePost(he);
         } else if (he.getRequestMethod().toLowerCase().equals("put")) {
