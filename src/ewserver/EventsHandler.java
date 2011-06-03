@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -182,7 +184,7 @@ public class EventsHandler implements HttpHandler{
 	 * {ide = IDE, oper = "check"} ou {ide = IDE, oper = "uncheck"} 
 	 * POST /events
 	 * HEADER: token = TOKEN
-	 * BODY: {ide = IDE, oper = "sync"}
+	 * BODY: {oper = "sync"}
 	 * @param he
 	 */
 	private void handlePost(HttpExchange he) {
@@ -240,7 +242,7 @@ public class EventsHandler implements HttpHandler{
             		/**
             		 * TODO: sync
             		 */
-            		if(EWServer.dbm.events.importEvent(ide, -1)){
+            		if(EWServer.dbm.events.importEvent(ide)){
             			
             		}
             		else{
@@ -288,6 +290,7 @@ public class EventsHandler implements HttpHandler{
     }
     
     private String validate(String token) {
+
 
         //token não presente nos headers - access forbidden
         if (token == null) {
