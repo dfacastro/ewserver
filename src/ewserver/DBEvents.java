@@ -80,13 +80,13 @@ public class DBEvents {
             Statement s = con.createStatement();
             ResultSet rs = null;
             if(dInicio.equals("") && dFim.equals(""))
-            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND SYSDATE <= dfim AND evento.username = empresas.username ORDER BY dinicio");
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND SYSDATE <= dfim AND evento.username = empresas.username ORDER BY dinicio");
             else if(dInicio.equals(""))
-            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND to_date('" + dFim + "', 'YYYY-MM-DD HH24:MI:SS') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
             else if(dFim.equals(""))
-            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dfim AND evento.username = empresas.username ORDER BY dinicio");
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'YYYY-MM-DD HH24:MI:SS') <= dfim AND evento.username = empresas.username ORDER BY dinicio");
             else
-            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'DD-MM-YYYY') <= dfim AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'YYYY-MM-DD HH24:MI:SS') <= dfim AND to_date('" + dFim + "', 'DD-MM-YYYY') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
 
             //se nao forem encontrados resultados
             if (!rs.next()) {
@@ -128,7 +128,7 @@ public class DBEvents {
     	
         try {
 			Statement s = con.createStatement();
-			ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username ORDER BY marcacoes DESC, dinicio");
+			ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username ORDER BY marcacoes DESC, dinicio");
 			
 			//se nao forem encontrados resultados
             if (!rs.next()) {
@@ -174,7 +174,7 @@ public class DBEvents {
     	
         try {
 			Statement s = con.createStatement();
-			String query = "SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username AND empresas.emp_id IN (";
+			String query = "SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username AND empresas.emp_id IN (";
 			query +=comps.get(0);
 
 			for(int i = 1;i<comps.length();i++){
@@ -227,7 +227,7 @@ public class DBEvents {
         try {
 
             s = con.createStatement();
-            ResultSet rs = s.executeQuery("SELECT evento.username, evento.event_id, evento.nome, evento.descricao, evento.onde, to_char(dinicio) as dinit, to_char(dfim) as df, evento.marcacoes, empresas.nome_empresa, empresas.emp_id FROM evento, empresas WHERE empresas.username = evento.username AND event_id = " + ide);
+            ResultSet rs = s.executeQuery("SELECT evento.username, evento.event_id, evento.nome, evento.descricao, evento.onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, to_char(dfim, 'YYYY-MM-DD HH24:MI:SS') as df, evento.marcacoes, empresas.nome_empresa, empresas.emp_id FROM evento, empresas WHERE empresas.username = evento.username AND event_id = " + ide);
 
             if (!rs.next()) {
                 return jso;
