@@ -22,6 +22,8 @@ import com.google.gdata.data.calendar.CalendarEventEntry;
 import com.google.gdata.data.calendar.CalendarEventFeed;
 import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DBEvents {
 
