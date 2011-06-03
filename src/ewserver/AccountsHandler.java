@@ -202,7 +202,7 @@ public class AccountsHandler implements HttpHandler {
 
             //em caso de sucesso...
             if (EWServer.dbm.accounts.add(body)) {
-                he.sendResponseHeaders(403, response.length());
+                he.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length());
                 response += body.toString();
                 send(response, he);
                 return;
@@ -269,7 +269,7 @@ public class AccountsHandler implements HttpHandler {
 
             //se a query nao for especificada...
             if (query.equals("")) {
-                results = EWServer.dbm.accounts.findByName(query);
+                results = EWServer.dbm.accounts.findByUsername(query);
             } //se a pesquisa for por nome...
             else if (oper.equals("by_name")) {
                 results = EWServer.dbm.accounts.findByName(query);

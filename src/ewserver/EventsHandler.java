@@ -60,7 +60,7 @@ public class EventsHandler implements HttpHandler{
 				 }*/
 				 if(tokens[0].equals("oper")){
 					 oper = tokens[1];
-				 } else if(tokens[0].equals("emp")){
+				 } else if(tokens[0].equals("idc")){
 					 idc = tokens[1];
 				 } else if(tokens[0].equals("ide")) {
 					 ide = tokens[1];				 
