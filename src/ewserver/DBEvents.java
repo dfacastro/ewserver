@@ -4,6 +4,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -258,5 +261,46 @@ public class DBEvents {
     	
     	
         return true;
+    }
+    
+    
+    
+    ArrayList<String> findGcIds (String username) {
+        ArrayList<String> ids = new ArrayList<String>();
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT  gc_id FROM evento WHERE username = '" + username + "'");
+            
+            while(rs.next())
+                ids.add(rs.getString("GC_ID"));
+            
+            s.close();
+            rs.close();
+            return ids;
+        } catch (SQLException ex) {
+            Logger.getLogger(DBEvents.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        
+    }
+    
+    String findDAlteracao(String gc_id) {
+        try {
+            Statement s = con.createStatement();
+            ResultSet rs = s.executeQuery("SELECT dalteracao FROM evento WHERE gc_id = '" + gc_id + "'");
+            
+            if(!rs.next())
+                return null;
+            
+            String dalteracao = rs.getString("DALTERACAO");
+            
+            s.close();
+            rs.close();
+            return dalteracao;
+            
+        } catch (SQLException ex) {
+            Logger.getLogger(DBEvents.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 }
