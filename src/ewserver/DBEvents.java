@@ -1,13 +1,27 @@
 package ewserver;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.gdata.client.calendar.CalendarQuery;
+import com.google.gdata.client.calendar.CalendarService;
+import com.google.gdata.data.DateTime;
+import com.google.gdata.data.calendar.CalendarEventEntry;
+import com.google.gdata.data.calendar.CalendarEventFeed;
+import com.google.gdata.util.AuthenticationException;
+import com.google.gdata.util.ServiceException;
 
 public class DBEvents {
 
@@ -28,7 +42,6 @@ public class DBEvents {
             s.close();
             return true;
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             System.out.println("ERROR: Event check: SQL Exception.");
             //e.printStackTrace();
             return false;
@@ -46,7 +59,6 @@ public class DBEvents {
             s.close();
             return true;
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             System.out.println("ERROR: Event uncheck: SQL Exception.");
             //e.printStackTrace();
             return false;
@@ -136,7 +148,6 @@ public class DBEvents {
 			s.close();
 			rs.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			System.out.println("ERROR: Event findThisWeek: SQL Exception.");
 			return null;
 			//e.printStackTrace();
@@ -191,7 +202,6 @@ public class DBEvents {
 			s.close();
 			rs.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			System.out.println("ERROR: Event findThisWeek: SQL Exception.");
 			//e.printStackTrace();
 			return null;
@@ -232,7 +242,6 @@ public class DBEvents {
             jso.put("nome_empresa", rs.getString("NOME_EMPRESA"));
 
         } catch (SQLException e) {
-            // TODO Auto-generated catch block
             //e.printStackTrace();
             System.out.println("ERROR: Event Info: SQL Exception.");
             return null;
@@ -252,11 +261,127 @@ public class DBEvents {
      * @return
      */
     
-    boolean importEvent(String idc, int months) {
-        if(months == -1)
-        	months = 2;
+    boolean importEvent(String usernameEmp) {
     	
+    	/*
+        * 2 Full: idc, nome, cidade, morada, descricao, telefones, gc_username, gc_password, gc_nome
+        * @param idc
+        * @param mode
+        * @return 
+        */
+    	String idc = EWServer.dbm.companies.getIDC(usernameEmp);
+        JSONObject empInfo = EWServer.dbm.companies.get(idc, 2);
+        
+    	String username = "";
+    	String password = ""; 
+    	String nomeCalendario = "";
+		try {
+			username = empInfo.getString("gc_username");
+	    	password = empInfo.getString("gc_password");
+	    	nomeCalendario = empInfo.getString("gc_nome");
+		} catch (JSONException e1) {
+			System.out.println("Erro a fazer load dos dados do username");
+			e1.printStackTrace();
+			return false;
+		}
+		
+		if(username.equals("") ||password.equals("") || nomeCalendario.equals("")){
+			System.out.println("Erro a fazer load dos dados do username");
+			return false;
+		}
     	
-        return true;
+    	String idCalendario = "";
+    	try {
+			URL feedUrlCalendarios = new URL("https://www.google.com/calendar/feeds/default");
+			CalendarService myService = new CalendarService("exampleCo-exampleApp-1");
+			myService.setUserCredentials(username, password);
+			CalendarEventFeed myFeed = myService.getFeed(feedUrlCalendarios, CalendarEventFeed.class);
+			
+			
+			for(int i = 0; i<myFeed.getEntries().size(); i++){
+				if(myFeed.getEntries().get(i).getTitle().getPlainText().toLowerCase().equals(nomeCalendario.toLowerCase())){
+					String[] tokens = myFeed.getEntries().get(i).getId().toString().split("/");
+					idCalendario = tokens[tokens.length-1];
+					break;
+				}
+			}
+			
+			if(idCalendario.equals("")) {
+				System.out.println("Calendario do utilizador não encontrado.");
+				return false; //calendario nao encontrado.
+			}
+			
+			//data de hoje no formato certo
+			String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
+			Calendar cal = Calendar.getInstance();
+			SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT_NOW);
+			String time[] = sdf.format(cal.getTime()).split(" ");
+			String startTime = time[0]+"T"+time[1];
+			
+			URL feedUrl = new URL("https://www.google.com/calendar/feeds/"+idCalendario+"/private/full");
+			//query para mostrar eventos a partir de hoje!
+			CalendarQuery myQuery = new CalendarQuery(feedUrl);
+			myQuery.setMinimumStartTime(DateTime.parseDateTime(startTime));
+			//myFeed = myService.getFeed(feedUrl, CalendarEventFeed.class);
+			CalendarEventFeed resultFeed = myService.query(myQuery, CalendarEventFeed.class);
+			
+			String idEvento = "";
+			/**
+			 * TODO: Ir buscar os ids DBEvents
+			 */
+			ArrayList<String> BDEventsID = new ArrayList<String>();
+			//percorrer os eventos
+			for(int i = 0; i<resultFeed.getEntries().size(); i++){
+				String[] tokens = resultFeed.getEntries().get(i).getId().toString().split("/");
+				idEvento = tokens[tokens.length-1];
+				//ver se o idEvento existe no
+				if(BDEventsID.contains(idEvento)){
+					BDEventsID.remove(idEvento);
+				}
+			}
+			//eliminar os eventos que ja nao estao no calendario
+			for(int i = 0; i<BDEventsID.size(); i++){
+				/**
+				 * TODO:
+				 */
+				//remover da base de dados
+				//cenas.remove(BDEventsID.get(i);
+			}
+			
+			//ver os eventos todos, se nao tiverem na base de dados adiciona, se tiverem e forem alterados-> altera, se tiver e nao for alterado nao faz nada
+			for(int i = 0; i<myFeed.getEntries().size(); i++){
+				String[] tokens = myFeed.getEntries().get(i).getId().toString().split("/");
+				idEvento = tokens[tokens.length-1];
+				//ver se o idEvento existe no 
+				/**
+				 * TODO:
+				 */
+				//se nao contem adiciona
+				if(true){
+					//adicionar a base de dados evento
+				}else{// se contem
+					if(true){//se nao foi alterado
+						continue;
+					}else{//se foi alterado
+						
+					}
+				}
+				break;
+			}
+			
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+			return false;
+		} catch (AuthenticationException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		} catch (ServiceException e) {
+			e.printStackTrace();
+			return false;
+		}
+        return false;
     }
 }
