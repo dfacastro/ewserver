@@ -341,7 +341,7 @@ public class DBCompanies {
          */
         try {
             Statement s = con.createStatement();
-            s.executeQuery("DELETE FROM telefones WHERE username = '" + username + "'");
+            s.executeQuery("DELETE FROM tels WHERE username = '" + username + "'");
             
             if(tels.length() == 0)
                 return;
