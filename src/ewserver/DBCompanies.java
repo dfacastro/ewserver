@@ -239,7 +239,7 @@ public class DBCompanies {
 
             //pesquisa os eventos do user ordenados pela data de inicio
             s = con.createStatement();
-            rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from evento WHERE username = '" + username + "' AND dinicio >= SYSDATE ORDER BY dinicio");
+            rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'DD-MM-YYYY') as dinit from evento WHERE username = '" + username + "' AND dfim >= SYSDATE ORDER BY dinicio");
 
             //percorre os resultados da pesquisa e adiciona-os ao array
             while (rs.next()) {

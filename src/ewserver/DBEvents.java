@@ -57,7 +57,7 @@ public class DBEvents {
     boolean uncheck(String ide) {
         try {
             Statement s = con.createStatement();
-            s.executeQuery("UPDATE evento SET marcacoes = marcacoes - 1 WHERE event_id = " + ide);
+            s.executeQuery("UPDATE evento SET marcacoes = marcacoes - 1 WHERE event_id = " + ide + " and marcacoes != 0");
             s.close();
             return true;
         } catch (SQLException e) {
@@ -84,7 +84,7 @@ public class DBEvents {
             if(dInicio.equals("") && dFim.equals(""))
             	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND lower(evento.descricao) LIKE '%" + descricao.toLowerCase() + "%' AND SYSDATE <= dfim AND evento.username = empresas.username ORDER BY dinicio");
             else if(dInicio.equals(""))
-            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(evento.descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND to_date('" + dFim + "', 'YYYY-MM-DD') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
+            	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(evento.descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND SYSDATE <= dfim AND to_date('" + dFim + " 23:59', 'YYYY-MM-DD HH24:MI') >= dinicio AND evento.username = empresas.username ORDER BY dinicio");
             else if(dFim.equals(""))
             	rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD') as dinit, nome_empresa FROM evento, empresas WHERE lower(nome) LIKE '%" + nome.toLowerCase() + "%' AND lower(evento.descricao) LIKE '%" + descricao.toLowerCase() + "%' AND lower(onde) LIKE '%" + onde.toLowerCase() + "%' AND to_date('" + dInicio + "', 'YYYY-MM-DD') <= dfim AND evento.username = empresas.username ORDER BY dinicio");
             else
@@ -130,7 +130,7 @@ public class DBEvents {
     	
         try {
 			Statement s = con.createStatement();
-			ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE dinicio >= SYSDATE AND dinicio <= SYSDATE + 7 AND evento.username = empresas.username ORDER BY marcacoes DESC, dinicio");
+			ResultSet rs = s.executeQuery("SELECT event_id, nome, onde, to_char(dinicio, 'YYYY-MM-DD HH24:MI:SS') as dinit, nome_empresa FROM evento, empresas WHERE dfim >= SYSDATE AND dfim <= SYSDATE + 7 AND evento.username = empresas.username ORDER BY marcacoes DESC, dinicio");
 			
 			//se nao forem encontrados resultados
             if (!rs.next()) {
@@ -263,9 +263,13 @@ public class DBEvents {
      * 
      * @param idc
      * @return
+     *      -1 em caso de erro
+     *      0 : sucesso
+     *      1 : calendario nao existe
+     *      2 : credenciais invalidas
      */
     
-    boolean importEvent(String usernameEmp) {
+    int importEvent(String usernameEmp) {
     	String idc = EWServer.dbm.companies.getIDC(usernameEmp);
         JSONObject empInfo = EWServer.dbm.companies.get(idc, 2);
     	String username = "";
@@ -277,11 +281,11 @@ public class DBEvents {
 	    	password = empInfo.getString("gc_password");
 	    	nomeCalendario = empInfo.getString("gc_nome");
 		} catch (JSONException e1) {
-			e1.printStackTrace();
-			return false;
+			//e1.printStackTrace();
+			return -1;
 		}
 		if(username.equals("") ||password.equals("") || nomeCalendario.equals("")){
-			return false;
+			return -1;
 		}
     	
     	String idCalendario = "";
@@ -303,7 +307,7 @@ public class DBEvents {
 			
 			if(idCalendario.equals("")) {
 				System.out.println("Calendario do utilizador nao encontrado.");
-				return false; //calendario nao encontrado.
+				return 1; //calendario nao encontrado.
 			}
 			//data de hoje no formato certo
 			String DATE_FORMAT_NOW = "yyyy-MM-dd HH:mm:ss";
@@ -348,13 +352,23 @@ public class DBEvents {
 					String dataAlt = resultFeed.getEntries().get(i).getUpdated().toString();
 					String nomeEvnt = resultFeed.getEntries().get(i).getTitle().getPlainText();
 					String descEvnt="";
+                                        
 					if(resultFeed.getEntries().get(i).getPlainTextContent().equals("")) descEvnt = "Sem descricao.";
 					else descEvnt = resultFeed.getEntries().get(i).getPlainTextContent();
-					String dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
-					String dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
-					String onde = "";
-					if(resultFeed.getEntries().get(i).getLocations().get(0).getValueString().equals("")) onde = "Sem local definido.";
-					else onde =resultFeed.getEntries().get(i).getLocations().get(0).getValueString();
+                                        
+					String dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString();//.split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
+					String dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString();//.split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
+					if(dInicio.contains("T")){
+                                            dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
+                                            dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
+                                        }
+                                        String onde = "";
+                                        
+					if(resultFeed.getEntries().get(i).getLocations().get(0).getValueString().equals(""))
+                                            onde = "Sem local definido.";
+					else
+                                            onde =resultFeed.getEntries().get(i).getLocations().get(0).getValueString();
+                                        
 					addEvent(usernameEmp,idEvento, nomeEvnt, dataAlt, descEvnt, dInicio, dFim, onde);
 					//adicionar a base de dados evento
 				}else{// se contem
@@ -368,10 +382,15 @@ public class DBEvents {
 						String descEvnt="";
 						if(resultFeed.getEntries().get(i).getPlainTextContent().equals("")) descEvnt = "Sem descricao.";
 						else descEvnt = resultFeed.getEntries().get(i).getPlainTextContent();
-						String dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
-						System.out.println(dInicio);
-						String dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
-						System.out.println(dFim);						String onde = "";
+                                                
+                                                String dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString();//.split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
+                                                String dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString();//.split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
+                                                if(dInicio.contains("T")){
+                                                    dFim = resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[0]+ " "+ resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getEndTime().toString().split("T")[1].split(":")[1];					
+                                                    dInicio = resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[0]+" "+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[0]+"-"+resultFeed.getEntries().get(i).getTimes().get(0).getStartTime().toString().split("T")[1].split(":")[1];
+                                                }
+                                                String onde = "";
+                                                
 						if(resultFeed.getEntries().get(i).getLocations().get(0).getValueString().equals("")) onde = "Sem local definido.";
 						else onde =resultFeed.getEntries().get(i).getLocations().get(0).getValueString();
 						updateEvent(usernameEmp,idEvento, nomeEvnt, dataAlt, descEvnt, dInicio, dFim, onde);
@@ -382,22 +401,22 @@ public class DBEvents {
 			
 		} catch (MalformedURLException e) {
 			System.out.println("MalformedURLException Import Exception");
-			e.printStackTrace();
-			return false;
+			//e.printStackTrace();
+			return -1;
 		} catch (AuthenticationException e) {
 			System.out.println("Authentication Import Exception");
-			e.printStackTrace();
-			return false;
+			//e.printStackTrace();
+			return 2;
 		} catch (IOException e) {
 			System.out.println("IO Import Exception");
-			e.printStackTrace();
-			return false;
+			//e.printStackTrace();
+			return -1;
 		} catch (ServiceException e) {
 			System.out.println("Service Import Exception");
-			e.printStackTrace();
-			return false;
+			//e.printStackTrace();
+			return -1;
 		}
-        return true;
+        return 0;
     }
     
         ArrayList<String> findGcIds (String username) {

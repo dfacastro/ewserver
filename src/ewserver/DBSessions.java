@@ -83,11 +83,24 @@ public class DBSessions {
     public boolean add(String username, String token) {
         try {
             Statement s = con.createStatement();
-            s.executeQuery("INSERT INTO sessao VALUES('" + username + "', '" + token + "')");
+            s.executeQuery("INSERT INTO sessao(username, token) VALUES('" + username + "', '" + token + "')");
         } catch (SQLException ex) {
             return false;
             //Logger.getLogger(DBSessions.class.getName()).log(Level.SEVERE, null, ex);
         }
         return true;        
+    }
+    
+    /**
+     * Apaga sessãos que tenham expirado
+     */
+    public void deleteOldSessions() {
+        try {
+            Statement s = con.createStatement();
+            s.executeQuery("DELETE FROM sessao WHERE dcriacao > (SYSDATE + 2)");
+        } catch (SQLException ex) {
+            
+            //Logger.getLogger(DBSessions.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

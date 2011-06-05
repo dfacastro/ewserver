@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
 import java.util.Iterator;
+import java.util.Timer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,52 +32,13 @@ public class EWServer {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        /*try {
+     
+            // cria instancia do SessionsMaintenance para apagar sessions que tenham expirado
+            DBSessionsMaintenance sm = new DBSessionsMaintenance();
+            Timer timer = new Timer();   
+            timer.scheduleAtFixedRate(sm, 60000, 60000);
             
-            JSONObject js = new JSONObject();
-            js.put("username", "user1");
-            js.put("pass", "pass1");
-            //dbm.companies.add(js);
-        } catch (JSONException ex) {
-            Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            System.out.println(dbm.companies.get("67", 0).toString(3));
-            
-            System.out.println("------ ACCOUNTS FIND ------------");
-            System.out.println(dbm.accounts.findByName("comp").toString(3));
-            
-            //update - muda o nome da cidade da empresa no. 67
-            JSONObject j = dbm.companies.get("67", 2);
-            j.put("cidade", "porto");
-            dbm.companies.update(j,"dcastro");
-            
-            //cria nova sessão
-            System.out.println(dbm.sessions.add("dcastro", "hgjh2f65gdyhj"));
-            System.out.println("SESSION: " + dbm.sessions.getUsername("hgjh2f65gdyhj"));
-            
-            //get upcoming events
-            System.out.println("EVENTOS DO DIOGO: ");
-            System.out.println(dbm.companies.getUpcomingEvents("67").toString(3));
-            
-            //teste DBEvents
-            System.out.println("--------- DBEvents --------------");
-            JSONArray js = new JSONArray();
-            js.put("81");
-            js.put("67");
-            System.out.println(""+dbm.events.findThisWeek(js).toString(3));
-            
-         * 
-         */
-            
-            // TESTE
-            
-            //SecureRandom random = new SecureRandom();
-            //System.out.println("TESTE: " + new BigInteger(230, random).toString(32)); 
-            //System.out.println("TESTE: " + new BigInteger(50, random).toString(32));
-            /**
-             *  ------------------------------------ SERVER ----------------------------------------
-             */
+            System.out.println("TimerTask running.");
             
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 8);
             
@@ -84,10 +46,6 @@ public class EWServer {
             server.createContext("/companies", new CompaniesHandler());
             server.createContext("/events", new EventsHandler());
             server.start();
-            
-        /*} catch (JSONException ex) {
-            Logger.getLogger(EWServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-             */   
+  
     }
 }

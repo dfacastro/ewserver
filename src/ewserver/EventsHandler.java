@@ -23,6 +23,7 @@ public class EventsHandler implements HttpHandler{
 
 	@Override
 	public void handle(HttpExchange he) throws IOException {
+            
             if (he.getRequestMethod().toLowerCase().equals("post")) {
                 handlePost(he);
             }  else if (he.getRequestMethod().toLowerCase().equals("get")) {
@@ -246,17 +247,30 @@ public class EventsHandler implements HttpHandler{
             		/**
             		 * TODO: sync
             		 */
-            		if(EWServer.dbm.events.importEvent(username)){
-            			System.out.println("Import feito com sucesso.");
-                        he.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
-                        send("", he);
-                        return;
+                        int result = EWServer.dbm.events.importEvent(username);
+            		if(result == 0){
+                            //System.out.println("Import feito com sucesso.");
+                            he.sendResponseHeaders(HttpURLConnection.HTTP_OK, 0);
+                            send("", he);
+                            return;
             		}
-            		else{
-        	       		he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
-        	    		send("", he);
-        	    		System.out.println("Erro no import.");
-        	    		return;
+                        else if (result == 2) { //credenciais invalidas
+                            he.sendResponseHeaders(HttpURLConnection.HTTP_CONFLICT, 0);
+                            send("", he);
+                            System.out.println("Erro no import: credenciais erradas.");
+                            return;
+                        }
+                        else if (result == 1) { //calendario nao existe
+                            he.sendResponseHeaders(HttpURLConnection.HTTP_NO_CONTENT, 0);
+                            send("", he);
+                            System.out.println("Erro no import: calendario invalido.");
+                            return;
+                        }
+                        else {
+                            he.sendResponseHeaders(HttpURLConnection.HTTP_INTERNAL_ERROR, 0);
+                            send("", he);
+                            System.out.println("Erro no import.");
+                            return;
             		}
             	}
             	else{
