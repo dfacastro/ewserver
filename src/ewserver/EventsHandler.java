@@ -23,14 +23,14 @@ public class EventsHandler implements HttpHandler{
 
 	@Override
 	public void handle(HttpExchange he) throws IOException {
-		if (he.getRequestMethod().toLowerCase().equals("post")) {
-            handlePost(he);
-        }  else if (he.getRequestMethod().toLowerCase().equals("get")) {
-            handleGet(he);
-        }  else {
-            he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, 0);
-            he.getResponseBody().close();
-        }
+            if (he.getRequestMethod().toLowerCase().equals("post")) {
+                handlePost(he);
+            }  else if (he.getRequestMethod().toLowerCase().equals("get")) {
+                handleGet(he);
+            }  else {
+                he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_METHOD, 0);
+                he.getResponseBody().close();
+            }
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class EventsHandler implements HttpHandler{
 	         if (oper.equals("")
 	                 || (oper.equals("companyevents") && idc.equals(""))
 	                 || (oper.equals("eventinfo") && ide.equals(""))
-	                 || (oper.equals("searchevent") && (dinicio.equals("") || (dfim.equals("")||onde.equals("")||nome.equals(""))))) {
+	                 || (oper.equals("searchevent") && (dinicio.equals("") && dfim.equals("") && onde.equals("") && nome.equals("") && empresa.equals("") && descricao.equals("")))) {
 	             
 				he.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, 0);
 	            send("", he);
